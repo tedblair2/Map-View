@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapActivity">
+
+    <org.osmdroid.views.MapView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:clickable="true"
+        android:layout_above="@id/distance"
+        android:id="@+id/mapview"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_margin="6dp"
+        android:text="Distance"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/distance"/>
+</RelativeLayout>
