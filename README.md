@@ -1,5 +1,5 @@
 # Search-View
-Implemented custom searchview using nomantim api for place search with autocomplete functionality using a  autocompletetextview
+Implemented custom searchview using nominatim api and sending requests using retrofit for place search with autocomplete functionality using an autocompletetextview
 
 # Map-View
 Implemented a mapview using openstreetmap and the osm depenedency to shwow directions from user current location to place they search before
