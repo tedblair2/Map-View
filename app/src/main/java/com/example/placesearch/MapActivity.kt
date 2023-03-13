@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.AsyncTask
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.widget.Toast
@@ -29,7 +28,7 @@ import org.osmdroid.views.MapController
 import org.osmdroid.views.overlay.ItemizedIconOverlay
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener
 import org.osmdroid.views.overlay.OverlayItem
-import org.osmdroid.views.overlay.infowindow.InfoWindow
+import org.osmdroid.views.overlay.Polyline
 
 private const val REQUEST_CODE=21
 class MapActivity : AppCompatActivity(),LocationListener {
@@ -50,6 +49,7 @@ class MapActivity : AppCompatActivity(),LocationListener {
     private lateinit var mapController: MapController
     private lateinit var markerOverlay: ItemizedIconOverlay<OverlayItem>
     private var distance=""
+    private lateinit var roadOverlay:Polyline
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,11 +101,11 @@ class MapActivity : AppCompatActivity(),LocationListener {
         markerOverlay=ItemizedIconOverlay(items,iconClick,applicationContext)
         binding.mapview.overlays.clear()
         binding.mapview.overlays.add(markerOverlay)
+        drawRoad(currentLocation!!,nextLocation)
         try {
             val dist=(currentLocation!!.distanceToAsDouble(nextLocation))/1000
             distance= String.format("%.2f",dist)
             binding.distance.text="Distance: ${distance}Km"
-            drawRoad(currentLocation!!,nextLocation)
         }catch (_:NullPointerException){}
 
     }
@@ -134,7 +134,7 @@ class MapActivity : AppCompatActivity(),LocationListener {
             waypoints.add(end)
             val road=roadManager.getRoad(waypoints)
             if (road.mStatus == Road.STATUS_OK) {
-                val roadOverlay = RoadManager.buildRoadOverlay(road)
+                roadOverlay = RoadManager.buildRoadOverlay(road)
                 binding.mapview.overlays.add(roadOverlay)
                 withContext(Dispatchers.Main){
                     binding.mapview.invalidate()
@@ -201,16 +201,28 @@ class MapActivity : AppCompatActivity(),LocationListener {
 
     override fun onLocationChanged(location: Location) {
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            markerOverlay.removeItem(currentMarker)
-            currentLocation= GeoPoint(location.latitude,location.longitude)
-            mapController.setCenter(currentLocation)
-            currentMarker= OverlayItem("You","My Location",currentLocation)
+            this.location=location
+            val newLocation=GeoPoint(location.latitude,location.longitude)
+//            markerOverlay.removeItem(currentMarker)
+//            currentLocation= GeoPoint(location.latitude,location.longitude)
+            mapController.animateTo(newLocation)
+            currentMarker= OverlayItem("You","My Location",newLocation)
             currentMarker.setMarker(ContextCompat.getDrawable(this,R.drawable.baseline_location_on_24))
-            markerOverlay.addItem(currentMarker)
+            items.clear()
+            items.add(currentMarker)
+            items.add(nextMarker)
+            markerOverlay.addItems(items)
+            currentLocation=newLocation
+//            markerOverlay.addItem(currentMarker)
+//            binding.mapview.invalidate()
+            drawRoad(currentLocation!!,nextLocation)
             try {
                 val dist=(currentLocation!!.distanceToAsDouble(nextLocation))/1000
                 distance= String.format("%.2f",dist)
                 binding.distance.text="Distance: ${distance}Km"
+                if (dist<20){
+                    locationManager.removeUpdates(this)
+                }
             }catch (_:NullPointerException){}
         }else{
             Toast.makeText(this, "Please enable you location", Toast.LENGTH_SHORT).show()
